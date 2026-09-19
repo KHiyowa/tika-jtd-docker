@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Custom MIME types definition for Ichitaro documents (.jtd, .jtt, .jttc)
+  Compatible with Apache Tika 4.x / FreeDesktop MIME specification.
+  Includes magic signatures to enable content-based detection even without filename headers.
+-->
+<mime-info>
+  <!-- Ichitaro Document (.jtd) -->
+  <mime-type type="application/x-jtd">
+    <_comment>Ichitaro Document (.jtd)</_comment>
+    <sub-class-of type="application/x-tika-msoffice"/>
+    <alias type="application/x-ichitaro-jtd"/>
+    <alias type="application/jtd"/>
+    <glob pattern="*.jtd"/>
+    <glob pattern="*.JTD"/>
+    <magic priority="60">
+      <match value="0xd0cf11e0a1b11ae1" type="string" offset="0:8">
+        <match value="SsmgV.01" type="string" offset="512:65536"/>
+      </match>
+      <match value="0xd0cf11e0a1b11ae1" type="string" offset="0:8">
+        <match value="DocumentText" type="unicodeLE" offset="512:65536"/>
+      </match>
+      <match value="0xd0cf11e0a1b11ae1" type="string" offset="0:8">
+        <match value="JSSlip" type="unicodeLE" offset="512:65536"/>
+      </match>
+    </magic>
+  </mime-type>
+
+  <!-- Ichitaro Template (.jtt) -->
+  <mime-type type="application/x-jtt">
+    <_comment>Ichitaro Template (.jtt)</_comment>
+    <sub-class-of type="application/x-tika-msoffice"/>
+    <alias type="application/x-ichitaro-jtt"/>
+    <alias type="application/jtt"/>
+    <glob pattern="*.jtt"/>
+    <glob pattern="*.JTT"/>
+  </mime-type>
+
+  <!-- Ichitaro Compressed Document (.jttc) -->
+  <mime-type type="application/x-jttc">
+    <_comment>Ichitaro Compressed Document (.jttc)</_comment>
+    <sub-class-of type="application/x-tika-msoffice"/>
+    <alias type="application/x-ichitaro-jttc"/>
+    <alias type="application/jttc"/>
+    <glob pattern="*.jttc"/>
+    <glob pattern="*.JTTC"/>
+    <magic priority="60">
+      <match value="0xd0cf11e0a1b11ae1" type="string" offset="0:8">
+        <match value="JustCompressedDocument" type="string" offset="512:65536"/>
+      </match>
+      <match value="0xd0cf11e0a1b11ae1" type="string" offset="0:8">
+        <match value="JSCompDocument" type="unicodeLE" offset="512:65536"/>
+      </match>
+      <match value="0xd0cf11e0a1b11ae1" type="string" offset="0:8">
+        <match value="-lh5-" type="string" offset="512:65536"/>
+      </match>
+    </magic>
+  </mime-type>
+</mime-info>

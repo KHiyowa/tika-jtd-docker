@@ -1,0 +1,8 @@
+services:
+  tika:
+    build: .
+    image: tika-openjtd:latest
+    container_name: tika
+    ports:
+      - "9998:9998"
+    restart: always
