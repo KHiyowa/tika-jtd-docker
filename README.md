@@ -82,7 +82,7 @@ Once started:
         │     => application/x-jtd (Priority 60 > default OLE 40)
         │
         ├─► [ExternalParser]
-        │     Invokes /usr/local/bin/rjtd-wrapper.sh ${INPUT_FILE}
+        │     Invokes /usr/local/bin/rjtd-wrapper.sh ${INPUT_FILE} ${OUTPUT_FILE}
         │
         ├─► [OpenJTD / rjtd]
         │     1. rjtd export <file> --format txt (Document Model parsing)

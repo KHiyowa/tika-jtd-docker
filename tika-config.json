@@ -30,7 +30,8 @@
         ],
         "commandLine": [
           "/usr/local/bin/rjtd-wrapper.sh",
-          "${INPUT_FILE}"
+          "${INPUT_FILE}",
+          "${OUTPUT_FILE}"
         ],
         "checkCommandLine": [
           "/usr/local/bin/rjtd",
@@ -40,7 +41,7 @@
           126,
           127
         ],
-        "contentSource": "stdout"
+        "contentSource": "outputFile"
       }
     },
     {
