@@ -18,8 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone OpenJTD repository
+# NOTE: Temporarily built from the KHiyowa fork (pending upstream inclusion in KimEJ/OpenJTD);
+# switch the URL back to https://github.com/KimEJ/OpenJTD.git once the changes land upstream.
 WORKDIR /usr/src
-RUN git clone --depth 1 https://github.com/KimEJ/OpenJTD.git openjtd
+RUN git clone --depth 1 https://github.com/KHiyowa/OpenJTD.git openjtd
 
 # Build rjtd CLI in release mode
 WORKDIR /usr/src/openjtd/rjtd

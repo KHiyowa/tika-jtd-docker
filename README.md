@@ -4,7 +4,7 @@
 [![Apache Tika](https://img.shields.io/badge/Apache%20Tika-4.0.0-red.svg)](https://tika.apache.org/)
 [![OpenJTD](https://img.shields.io/badge/OpenJTD-rjtd-orange.svg)](https://github.com/KimEJ/OpenJTD)
 
-An Apache Tika Server container extended with [OpenJTD](https://github.com/KimEJ/OpenJTD) (`rjtd`) support to parse Ichitaro (一太郎) documents (`.jtd`, `.jtt`, `.jttc`).
+An Apache Tika Server container extended with [OpenJTD](https://github.com/KHiyowa/OpenJTD) (`rjtd`) support to parse Ichitaro (一太郎) documents (`.jtd`, `.jtt`, `.jttc`).
 
 Designed for seamless integration with **OpenWebUI**, document RAG pipelines, and enterprise search platforms.
 
@@ -112,6 +112,7 @@ Once started:
 ## Acknowledgements / 謝辞
 
 - [OpenJTD](https://github.com/KimEJ/OpenJTD) by KimEJ - An outstanding open-source reverse-engineering and parser effort for Ichitaro documents.
+- [KHiyowa/OpenJTD](https://github.com/KHiyowa/OpenJTD) - Fork used for building this container. Temporarily, the source is built from this fork (pending upstream inclusion in KimEJ/OpenJTD); it will be switched back once the changes land upstream.
 - [Apache Tika](https://tika.apache.org/) by The Apache Software Foundation.
 
 ## License
