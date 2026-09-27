@@ -15,14 +15,14 @@ RUN apk add --no-cache curl jq
 ARG JTD_VERSION=latest
 ARG KOTLIN_VERSION=2.4.20
 
-# Download tika-parser-jtd JAR from GitHub Releases
+# Download tika-parser-jtd JAR from GitHub Releases (exclude -javadoc, -cli, etc.)
 RUN if [ "$JTD_VERSION" = "latest" ]; then \
       RELEASE_URL="https://api.github.com/repos/KHiyowa/Tika-JTD/releases/latest"; \
     else \
       RELEASE_URL="https://api.github.com/repos/KHiyowa/Tika-JTD/releases/tags/${JTD_VERSION}"; \
     fi && \
     JAR_URL=$(curl -s "$RELEASE_URL" \
-      | jq -r '.assets[] | select(.name | test("^tika-parser-jtd-[0-9].*\\.jar$")) | .browser_download_url') && \
+      | jq -r '.assets[] | select(.name | test("^tika-parser-jtd-[0-9][^-]*\\.jar$")) | .browser_download_url') && \
     echo "Downloading Tika JTD from: $JAR_URL" && \
     curl -fL -o /tmp/tika-parser-jtd.jar "$JAR_URL"
 
