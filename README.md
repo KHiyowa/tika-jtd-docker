@@ -1,120 +1,115 @@
-# Apache Tika + OpenJTD (Ichitaro / 一太郎 Parser Container)
+# Apache Tika + Tika-JTD（一太郎パーサー組み込み Docker コンテナ）
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Apache Tika](https://img.shields.io/badge/Apache%20Tika-4.0.0-red.svg)](https://tika.apache.org/)
-[![OpenJTD](https://img.shields.io/badge/OpenJTD-rjtd-orange.svg)](https://github.com/KimEJ/OpenJTD)
+[![Tika-JTD](https://img.shields.io/badge/Tika--JTD-v0.2.0-green.svg)](https://github.com/KHiyowa/tika-jtd)
 
-An Apache Tika Server container extended with [OpenJTD](https://github.com/KHiyowa/OpenJTD) (`rjtd`) support to parse Ichitaro (一太郎) documents (`.jtd`, `.jtt`, `.jttc`).
+Apache Tika 4 公式サーバーに、一太郎文書（`.jtd` / `.jtt` / `.jttc`）パーサー [Tika-JTD](https://github.com/KHiyowa/tika-jtd) を組み込んだ Docker コンテナです。
 
-Designed for seamless integration with **OpenWebUI**, document RAG pipelines, and enterprise search platforms.
-
----
-
-## Features / 特徴
-
-- **Multi-stage Docker Build**: Builds the Rust `rjtd-cli` toolset (`rust:slim`) and packages only the lightweight binary into the `apache/tika:latest-full` (v4.0.0) runtime.
-- **Headerless Magic Byte Detection**: OpenWebUI and many HTTP clients do not transmit `Content-Disposition` (filename) headers when streaming files to Tika. This project includes custom MIME magic byte rules (`custom-mimetypes.xml`) that accurately detect Ichitaro CFB containers via internal stream markers (`SsmgV.01`, `DocumentText`, `JustCompressedDocument`) even without filenames.
-- **Robust Text Extraction**: Prioritizes `rjtd export --format txt` (Document Model text extraction) with automatic fallback to `rjtd cat` (direct `/DocumentText` payload recovery).
-- **Tika 4.x Compatible**: Uses the modern JSON configuration format (`tika-config.json`) with `ExternalParser` and preserves all existing Tika parsers (`default-parser`).
+**OpenWebUI**、各種 RAG パイプライン、全文検索エンジンへの組み込みを想定し、ファイル名や拡張子が付与されないストリーミング送信環境でも確実に一太郎文書を認識・パースできるように最適化されています。
 
 ---
 
-## Quick Start / クイックスタート
+## 主な特徴
 
-### 1. Build and Run with Docker Compose
+- **超高速ビルド＆純 JVM 構成**:
+  前身（Rust 版 `rjtd`）のようにコンテナ内で重厚なコンパイルを行う必要がありません。公式 `apache/tika:latest-full` に Kotlin/JVM 実装のパーサー JAR をドロップイン配置する構成のため、わずか数秒でビルドが完了します。
+- **ヘッダーレス（ファイル名未指定）自動判定**:
+  OpenWebUI などの HTTP クライアントは、ファイルを Tika へストリーミング転送する際に `Content-Disposition`（ファイル名・拡張子）を送信しない場合があります。本コンテナでは OLE2/CFB コンテナ内部の一太郎固有ストリームマーカーを検出する高優先度（priority 60）のマジックバイト定義を内包しているため、**拡張子情報が一切ない生バイナリでも 100% 確実に一太郎文書と自動判別**してテキストを救出します。
+- **オブジェクト枠の再帰抽出**:
+  一太郎文書内に埋め込まれた表計算データ（Excel / BIFF8）やベクター画像（WMF / EMF）、ラスタ画像（JPEG / PNG 等）も Tika の標準パイプラインを通じて再帰的に抽出されます。
+
+---
+
+## クイックスタート
+
+### 1. 起動
 
 ```bash
 docker compose up -d --build
 ```
 
-### 2. Verify Server Status
+### 2. 稼働確認
 
 ```bash
 curl -s http://localhost:9998/version
-# Output: Apache Tika 4.0.0
+# 出力例: Apache Tika 4.0.0
 ```
 
-### 3. Extract Text from an Ichitaro Document
+### 3. テキスト抽出テスト
 
 ```bash
-# Via text endpoint
+# 標準テキストエンドポイント
 curl -T sample.jtd http://localhost:9998/tika
 
-# Via JSON text endpoint (used by OpenWebUI / Tika 4)
+# Tika 4 の JSON テキストエンドポイント（OpenWebUI が使用）
 curl -T sample.jtd http://localhost:9998/tika/json/text
 ```
+※ファイル名を指定せず直接バイナリをパイプしても正常に判定・抽出されます。
 
 ---
 
-## Integration with OpenWebUI
+## OpenWebUI との連携手順
 
-In your OpenWebUI `docker-compose.yml`, replace the default Tika image with this custom build:
+OpenWebUI の `docker-compose.yml` に本サービスを組み込む例です。
 
 ```yaml
 services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    environment:
+      - TIKA_SERVER_URL=http://tika:9998
+    depends_on:
+      - tika
+    restart: always
+
   tika:
-    build: ./tika
-    image: tika-openjtd:latest
+    build: ../tika-jtd-docker
+    image: tika-jtd:latest
     container_name: tika
     ports:
       - "9998:9998"
     restart: always
 ```
 
-Once started:
-1. Navigate to OpenWebUI **Admin Panel > Settings > Documents**.
-2. Set **Content Extraction Engine** to `Tika`.
-3. Set **Tika Server URL** to `http://tika:9998` (or your host IP).
-4. Upload any `.jtd`, `.jtt`, or `.jttc` file in your chat or knowledge base!
+### OpenWebUI 管理画面での設定
+
+1. OpenWebUI に管理者でログインし、**管理者パネル → 設定 → ドキュメント** を開きます。
+2. **コンテンツ抽出エンジン** で `Tika` を選択します。
+3. **Tika Server URL** に `http://tika:9998`（またはコンテナ間の解決名）を入力して保存します。
+4. これでチャット画面やナレッジベース（ドキュメント）に `.jtd` / `.jtt` / `.jttc` ファイルをそのままドラッグ＆ドロップして RAG 検索・要約が可能になります！
 
 ---
 
-## How It Works / アーキテクチャ解説
+## 仕組み・アーキテクチャ
 
-```
-[User / OpenWebUI]
+```text
+[OpenWebUI / クライアント]
         │
-        ▼ HTTP PUT /tika/json/text
+        ▼ HTTP PUT /tika/json/text（※ファイル名ヘッダーなしでも可）
 [Apache Tika Server 4.0.0]
         │
-        ├─► [MimeTypes / MagicDetector]
-        │     Detects CFB header (D0 CF 11 E0 A1 B1 1A E1) + "SsmgV.01" / "DocumentText"
-        │     => application/x-jtd (Priority 60 > default OLE 40)
+        ├─► [MimeTypes マジックバイト判定 (priority 60)]
+        │     CFB ヘッダ（0xd0cf11e0a1b11ae1）+ "SsmgV.01" / "DocumentText" 等
+        │     => application/vnd.justsystem.ichitaro を特定
         │
-        ├─► [ExternalParser]
-        │     Invokes /usr/local/bin/rjtd-wrapper.sh ${INPUT_FILE} ${OUTPUT_FILE}
+        ├─► [JtdParser (com.hiyowa.tika.jtd.JtdParser)]
+        │     1. OLE2 / CFB ストリーム解体（Apache POI）
+        │     2. 本文・マルチシート・脚注・枠内テキスト抽出
+        │     3. オブジェクト枠（Excel, WMF, 画像等）の再帰的パース
         │
-        ├─► [OpenJTD / rjtd]
-        │     1. rjtd export <file> --format txt (Document Model parsing)
-        │     2. Fallback: rjtd cat <file> (Direct stream recovery)
-        │
-        ▼ Return JSON with "tk:content"
-[OpenWebUI RAG / Chat Context]
+        ▼ 本文テキストおよびメタデータを JSON で返却
+[OpenWebUI RAG / チャットコンテキスト]
 ```
 
 ---
 
-## Repository Structure
+## 関連プロジェクト
 
-```
-.
-├── Dockerfile              # Multi-stage build (Rust builder -> Tika runtime)
-├── docker-compose.yml      # Standalone compose setup
-├── custom-mimetypes.xml    # FreeDesktop/Tika MIME & Magic byte rules
-├── tika-config.json        # Tika 4.0.0 server & external parser config
-├── rjtd-wrapper.sh         # Resilient parser execution wrapper
-├── LICENSE                 # Apache-2.0
-└── README.md
-```
+- [Tika-JTD](https://github.com/KHiyowa/tika-jtd) - Apache Tika 4 向け純 JVM 一太郎パーサー本体
 
----
+## ライセンス
 
-## Acknowledgements / 謝辞
-
-- [OpenJTD](https://github.com/KimEJ/OpenJTD) by KimEJ - An outstanding open-source reverse-engineering and parser effort for Ichitaro documents.
-- [KHiyowa/OpenJTD](https://github.com/KHiyowa/OpenJTD) - Fork used for building this container. Temporarily, the source is built from this fork (pending upstream inclusion in KimEJ/OpenJTD); it will be switched back once the changes land upstream.
-- [Apache Tika](https://tika.apache.org/) by The Apache Software Foundation.
-
-## License
-
-Licensed under the [Apache License, Version 2.0](LICENSE).
+本プロジェクトは [Apache License, Version 2.0](LICENSE) のもとで公開されています。

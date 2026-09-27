@@ -1,7 +1,7 @@
 services:
   tika:
     build: .
-    image: tika-openjtd:latest
+    image: tika-jtd:latest
     container_name: tika
     ports:
       - "9998:9998"
